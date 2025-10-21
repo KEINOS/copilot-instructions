@@ -67,7 +67,7 @@ When reviewing pull requests to this repository, GitHub Copilot should prioritiz
    - Verify no contradictions exist across different sections of instructions
    - Check that new instructions align with existing organizational standards
    - Ensure terminology and concepts are used consistently throughout
-   - Validate that priority orders (e.g., Security > Maintainability > Performance) are maintained
+   - Validate that priority orders (e.g., Security > Consistency > Index Accuracy > Readability) are maintained
    - Confirm that TDD methodology requirements remain strict and uncompromised
 
 3. **Table of Contents and Index Accuracy**
