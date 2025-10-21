@@ -1,0 +1,188 @@
+name: Sync Copilot Instructions
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      force_update:
+        description: 'Force update even if no changes detected'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-instructions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download common instructions
+        run: |
+          # KEINOS common instructions repository
+          REPO_URL="https://raw.githubusercontent.com/KEINOS/copilot-instructions/main/common-instructions.md"
+          TEMPLATE_URL="https://raw.githubusercontent.com/KEINOS/copilot-instructions/main/copilot-instructions-template.md"
+
+          echo "📥 Downloading latest common instructions..."
+          curl -f -s "$REPO_URL" > /tmp/common-instructions.md
+          curl -f -s "$TEMPLATE_URL" > /tmp/template.md
+
+          # Verify downloads
+          if [ ! -s /tmp/common-instructions.md ]; then
+            echo "❌ Failed to download common instructions"
+            exit 1
+          fi
+
+          echo "✅ Successfully downloaded instructions"
+          echo "📊 File size: $(wc -c < /tmp/common-instructions.md) bytes"
+
+      - name: Get latest commit info
+        id: commit-info
+        run: |
+          # Get the latest commit hash and date from the source repository
+          COMMIT_INFO=$(curl -s "https://api.github.com/repos/KEINOS/copilot-instructions/commits/main" | jq -r '.sha[:7] + " (" + .commit.author.date + ")"')
+          echo "commit_info=$COMMIT_INFO" >> $GITHUB_OUTPUT
+
+      - name: Create or update copilot instructions
+        run: |
+          mkdir -p .github
+
+          if [ ! -f .github/copilot-instructions.md ]; then
+            echo "📝 Creating new copilot-instructions.md from template..."
+
+            # Use template and replace placeholders
+            PROJECT_NAME=$(basename $(pwd))
+            sed "s/\[PROJECT_NAME\]/$PROJECT_NAME/g" /tmp/template.md > .github/copilot-instructions.md
+
+            # Insert common instructions
+            awk '
+              /<!-- SYNC_START: DO NOT EDIT THIS SECTION MANUALLY -->/ {
+                print $0
+                print "<!-- Last synced: '"$(date -u)"' -->"
+                print "<!-- Source commit: ${{ steps.commit-info.outputs.commit_info }} -->"
+                print ""
+                while ((getline line < "/tmp/common-instructions.md") > 0) {
+                  print line
+                }
+                close("/tmp/common-instructions.md")
+                # Skip until SYNC_END
+                while (getline > 0) {
+                  if (/<!-- SYNC_END -->/) {
+                    print $0
+                    break
+                  }
+                }
+                next
+              }
+              { print }
+            ' .github/copilot-instructions.md > /tmp/updated.md
+
+            mv /tmp/updated.md .github/copilot-instructions.md
+            echo "new_file=true" >> $GITHUB_ENV
+          else
+            echo "🔄 Updating existing copilot-instructions.md..."
+
+            # Create backup
+            cp .github/copilot-instructions.md .github/copilot-instructions.md.bak
+
+            # Update the content between markers
+            awk '
+              /<!-- SYNC_START: DO NOT EDIT THIS SECTION MANUALLY -->/ {
+                print $0
+                print "<!-- Last synced: '"$(date -u)"' -->"
+                print "<!-- Source commit: ${{ steps.commit-info.outputs.commit_info }} -->"
+                print ""
+                while ((getline line < "/tmp/common-instructions.md") > 0) {
+                  print line
+                }
+                close("/tmp/common-instructions.md")
+                # Skip until SYNC_END
+                while (getline > 0) {
+                  if (/<!-- SYNC_END -->/) {
+                    print $0
+                    break
+                  }
+                }
+                next
+              }
+              { print }
+            ' .github/copilot-instructions.md.bak > .github/copilot-instructions.md
+
+            echo "new_file=false" >> $GITHUB_ENV
+          fi
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if [ "${{ env.new_file }}" = "true" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "change_type=created" >> $GITHUB_OUTPUT
+          elif git diff --quiet .github/copilot-instructions.md.bak .github/copilot-instructions.md; then
+            if [ "${{ github.event.inputs.force_update }}" = "true" ]; then
+              echo "changes=true" >> $GITHUB_OUTPUT
+              echo "change_type=forced" >> $GITHUB_OUTPUT
+            else
+              echo "changes=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "change_type=updated" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: sync copilot instructions from KEINOS/copilot-instructions
+
+            - Source commit: ${{ steps.commit-info.outputs.commit_info }}
+            - Change type: ${{ steps.check-changes.outputs.change_type }}
+            - Sync date: $(date -u)
+          title: "🔄 Sync Copilot Instructions"
+          body: |
+            ## 📋 Copilot Instructions Sync
+
+            This PR automatically syncs the latest common Go development instructions from the KEINOS organization repository.
+
+            ### 📊 Change Summary
+            - **Change Type**: ${{ steps.check-changes.outputs.change_type }}
+            - **Source Repository**: [KEINOS/copilot-instructions](https://github.com/KEINOS/copilot-instructions)
+            - **Source Commit**: ${{ steps.commit-info.outputs.commit_info }}
+            - **Sync Date**: $(date -u)
+
+            ### 🔍 What's Updated
+            - Common Go development guidelines
+            - TDD methodology instructions
+            - Security best practices
+            - Testing requirements
+
+            ### ✅ Security Review
+            This update has been automatically reviewed for suspicious patterns and malicious content.
+
+            ### 🎯 Next Steps
+            1. Review the changes in the Files tab
+            2. Ensure project-specific instructions are still appropriate
+            3. Merge if everything looks good
+
+            ---
+            *This PR was automatically created by GitHub Actions*
+          branch: sync-copilot-instructions
+          delete-branch: true
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check-changes.outputs.changes }}" = "true" ]; then
+            echo "✅ Copilot instructions ${{ steps.check-changes.outputs.change_type }}"
+            echo "📝 Pull request created for review"
+          else
+            echo "ℹ️ No changes detected - instructions are up to date"
+          fi

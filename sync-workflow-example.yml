@@ -1,0 +1,80 @@
+name: Sync Copilot Instructions
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-instructions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download common instructions
+        run: |
+          # KEINOS common instructions repository
+          REPO_URL="https://raw.githubusercontent.com/KEINOS/copilot-instructions/main/common-instructions.md"
+
+          echo "📥 Downloading latest common instructions..."
+          curl -f -s "$REPO_URL" > /tmp/common-instructions.md
+
+          # Verify download
+          if [ ! -s /tmp/common-instructions.md ]; then
+            echo "❌ Failed to download common instructions"
+            exit 1
+          fi
+
+          echo "✅ Successfully downloaded instructions"
+          echo "📊 File size: $(wc -c < /tmp/common-instructions.md) bytes"
+
+      - name: Update copilot instructions
+        run: |
+          # Create backup
+          cp .github/copilot-instructions.md .github/copilot-instructions.md.bak
+
+          # Update the content between markers
+          awk '
+            /<!-- SYNC_START: DO NOT EDIT THIS SECTION MANUALLY -->/ {
+              print $0
+              print "<!-- Last synced: '"$(date -u)"' -->"
+              print "<!-- Source: github.com/KEINOS/copilot-instructions -->"
+              print ""
+              # Read and insert the common instructions
+              while ((getline line < "/tmp/common-instructions.md") > 0) {
+                print line
+              }
+              close("/tmp/common-instructions.md")
+              # Skip until SYNC_END
+              while (getline > 0) {
+                if (/<!-- SYNC_END -->/) {
+                  print $0
+                  break
+                }
+              }
+              next
+            }
+            { print }
+          ' .github/copilot-instructions.md.bak > .github/copilot-instructions.md
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet .github/copilot-instructions.md; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/copilot-instructions.md
+          git commit -m "chore: sync copilot instructions from KEINOS/copilot-instructions"
+          git push

@@ -1,0 +1,43 @@
+name: Markdown Lint
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check UTF-8 encoding without BOM
+        run: |
+          echo "Checking for UTF-8 BOM in Markdown files..."
+          FOUND_BOM=false
+
+          while IFS= read -r file; do
+            if file "$file" | grep -q "with BOM"; then
+              echo "ERROR: BOM detected in $file"
+              FOUND_BOM=true
+            fi
+          done < <(find . -name "*.md" -not -path "./node_modules/*")
+
+          if [ "$FOUND_BOM" = "true" ]; then
+            echo "Please save Markdown files as UTF-8 without BOM"
+            exit 1
+          fi
+
+          echo "All Markdown files are UTF-8 without BOM"
+
+      - name: Run Markdown Lint
+        uses: DavidAnson/markdownlint-cli2-action@v20
+        with:
+          globs: '**/*.md'
+          config: '.markdownlint.json'
