@@ -53,7 +53,8 @@ _Summary: Anchor every change on security-first TDD and clear communication._
 
 - **Priority Order**: Security > Maintainability > Performance
 - **Development Method**: TDD (Test-Driven Development) is mandatory - never write production code before tests
-- **Testing Framework**: Prefer `github.com/stretchr/testify` for assertions when available; use standard library `testing` package if not approved by project
+- **Testing Framework**: Prefer `github.com/stretchr/testify` for assertions when available; use standard library
+  `testing` package if not approved by project
 - **Code Style**: Self-documenting code with minimal, purposeful comments
 - **Language**: English for all code, comments, and documentation (international OSS collaboration)
 
@@ -74,8 +75,10 @@ _Summary: Run the full red-green-refactor loop without skipping or reordering st
   - State the function/feature name and its purpose clearly
   - Wait for user's explicit approval before proceeding
 - Warn user to `git commit` before proceeding if the change is going to be significant
-- Run `go test -cover -coverprofile coverage.out ./...` to establish baseline coverage percentage **as the standard**
-  - **Record the current coverage state** by preserving the `coverage.out` file and noting the coverage percentage displayed in the output for comparison in later steps
+- Run `go test -cover -coverprofile coverage.out ./...` to establish baseline coverage percentage **as the
+  standard**
+  - **Record the current coverage state** by preserving the `coverage.out` file and noting the coverage percentage
+    displayed in the output for comparison in later steps
 - Run `golangci-lint run` to check current lint status
 
 ### Step 2: Example Function
@@ -87,7 +90,8 @@ For expected usage and golden-case scenarios follow these steps:
   - Public functions → `example_test.go`
   - Private functions → `<package name>_test.go`
 
-Note that expected error-cases and edge cases in unit tests should NOT be included in `example_test.go`. Place them in `<package name>_test.go` as `TestXXX()` functions instead.
+Note that expected error-cases and edge cases in unit tests should NOT be included in `example_test.go`. Place them
+in `<package name>_test.go` as `TestXXX()` functions instead.
 
 ### Step 3: Dummy Implementation
 
@@ -427,7 +431,8 @@ _Summary: Structure tests for clarity, coverage, and repeatability using appropr
 
 - **File naming**:
   - `<package name>_test.go` - Unit tests for error cases, edge cases and complex golden cases
-  - `example_test.go` - Example functions and simple golden cases (godoc) - **MUST use `package <name>_test`** in package name declaration for black-box testing from user perspective
+  - `example_test.go` - Example functions and simple golden cases (godoc) - **MUST use `package <name>_test`** in
+    package name declaration for black-box testing from user perspective
   - `<package name>_internal_test.go` - Private function tests
 - **Package declaration**:
   - `example_test.go` → **ALWAYS `package <name>_test`** (black-box, external user view)
@@ -522,7 +527,9 @@ _Summary: Coordinate goroutines carefully and clean up every execution path._
 - Close channels from the sender side and keep critical sections small.
 - Use modern Go features (e.g., `WaitGroup.Go` in Go 1.25+) when available; provide fallbacks for older versions.
 
-> Note: Use the Go version declared in the project's `go.mod` as the upper bound for examples and patterns in this guide. For Go 1.25+ you may use `sync.WaitGroup.Go`; for this repository (go 1.24.0), prefer the classic `Add/Done` pattern instead.
+> Note: Use the Go version declared in the project's `go.mod` as the upper bound for examples and patterns in this
+> guide. For Go 1.25+ you may use `sync.WaitGroup.Go`; for this repository (go 1.24.0), prefer the classic `Add/Done`
+> pattern instead.
 
 ### Goroutines
 

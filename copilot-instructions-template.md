@@ -7,12 +7,14 @@ This project follows the KEINOS organization's common Go development guidelines.
 <!-- SYNC_START: DO NOT EDIT THIS SECTION MANUALLY -->
 <!-- This section is automatically updated from common-instructions.md -->
 
+<!--
 ---
 description: 'Common instructions for AI agents developing Go code with strict TDD methodology'
 applyTo: '**/*.go,**/go.mod,**/go.sum'
 ---
+-->
 
-# Common Go Development Instructions for AI Agents
+## Common Go Development Instructions for AI Agents
 
 > **🚨 CRITICAL: TDD is MANDATORY**
 >

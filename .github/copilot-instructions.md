@@ -2,9 +2,11 @@
 
 ## Repository Purpose
 
-This repository manages and distributes GitHub Copilot custom instructions for Go development across the organization ([KEINOS' repositories](https://github.com/KEINOS/)).
+This repository manages and distributes GitHub Copilot custom instructions for Go development across the
+organization ([KEINOS' repositories](https://github.com/KEINOS/)).
 
-**IMPORTANT**: The files `common-instructions.md` and `copilot-instructions-template.md` in the repository root are **templates for other projects**, NOT instructions for developing this repository itself.
+**IMPORTANT**: The files `common-instructions.md` and `copilot-instructions-template.md` in the repository root are
+**templates for other projects**, NOT instructions for developing this repository itself.
 
 ## Project Context
 
@@ -105,6 +107,7 @@ When working on this repository, AI agents should:
 
 ---
 
-**Note**: This repository follows a documentation-first approach. Changes should prioritize clarity, accuracy, and usability for the KEINOS organization's Go developers.
+**Note**: This repository follows a documentation-first approach. Changes should prioritize clarity, accuracy, and
+usability for the KEINOS organization's Go developers.
 
 **Last Updated**: October 21, 2025
