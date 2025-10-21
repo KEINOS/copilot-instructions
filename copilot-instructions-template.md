@@ -14,7 +14,7 @@ applyTo: '**/*.go,**/go.mod,**/go.sum'
 ---
 -->
 
-## Common Go Development Instructions for AI Agents
+# Common Go Development Instructions for AI Agents
 
 > **🚨 CRITICAL: TDD is MANDATORY**
 >
