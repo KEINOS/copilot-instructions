@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD025 -->
 # Copilot Instructions for [PROJECT_NAME]
 
 ## Organization Standards

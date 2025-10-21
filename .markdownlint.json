@@ -8,8 +8,5 @@
   "MD033": {
     "allowed_elements": ["details", "summary"]
   },
-  "MD041": false,
-  "copilot-instructions-template.md": {
-    "MD025": false
-  }
+  "MD041": false
 }
