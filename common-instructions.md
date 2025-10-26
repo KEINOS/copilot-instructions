@@ -111,7 +111,9 @@ in `<package name>_test.go` as `TestXXX()` functions instead.
 
 ### Step 6: Fix Lint Errors
 
-- Run `golangci-lint run` and resolve ALL issues
+- Run `golangci-lint run --fix` to automatically fix issues that support auto-fix functionality
+- Then run `golangci-lint run` to check for any remaining issues
+- Resolve ALL remaining issues manually if needed
 - Never edit `.golangci.yml` without explicit approval
 - Keep `//nolint` usage exceptional and well-documented
 - Fix issues from high line numbers downward
@@ -776,7 +778,10 @@ go test -coverprofile coverage.out # Generate coverage file to record coverage
 go test -run TestName              # Run specific test
 
 # Linting and formatting
+golangci-lint run --help     # Show help for golangci-lint usage
 golangci-lint run            # Run linter
+golangci-lint run --fix      # Auto-fix lint issues
+golangci-lint run --enable-only <linter name>  # Run specific linter only (e.g., golangci-lint run --enable-only wsl_v5)
 gofmt -w .                   # Format code
 goimports -w .               # Fix imports
 
